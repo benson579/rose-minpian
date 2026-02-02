@@ -22,6 +22,9 @@
             const ui = document.getElementById('errorUI');
             const det = document.getElementById('errorDetail');
             if(ui && det) {
+                // 忽略 resize loop 錯誤，這在某些瀏覽器是無害的
+                if(message && message.includes("ResizeObserver loop")) return;
+                
                 ui.classList.remove('hidden');
                 document.getElementById('statusUI').classList.add('hidden');
                 det.innerText = "程式執行錯誤: " + message;
@@ -111,7 +114,7 @@
                 "type": "box", "layout": "vertical", "spacing": "sm", "paddingAll": "16px",
                 "contents": [
                   { "type": "button", "style": "primary", "height": "sm", "color": "#C0A062", "action": { "type": "uri", "label": "✨ 加 LINE 好友", "uri": "https://line.me/ti/p/Mr5JeZFTkv" } },
-                  { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "📝 諮詢表單連結", "uri": "https://financesheet-1.vercel.app/" } },
+                  { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "📝 諮詢表單連結", "uri": "https://rosefinancesheet.vercel.app/" } },
                   { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "➤ 分享給好友", "uri": "https://liff.line.me/" + MY_LIFF_ID } }
                 ]
               }
@@ -200,7 +203,7 @@
               "footer": {
                 "type": "box", "layout": "vertical", "spacing": "sm", "paddingAll": "16px",
                 "contents": [
-                  { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "📷 御謙 Instagram", "uri": "https://www.instagram.com/youtrend_vip" } },
+                  { "type": "button", "style": "primary", "height": "sm", "color": "#C0A062", "action": { "type": "uri", "label": "📷 御謙 Instagram", "uri": "https://www.instagram.com/youtrend_vip" } },
                   { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "📘 御謙 Facebook", "uri": "https://www.facebook.com/share/1CsML2XrDx/" } },
                   { "type": "button", "style": "primary", "height": "sm", "color": "#404040", "action": { "type": "uri", "label": "📍 公司地址", "uri": "https://maps.app.goo.gl/81JB2KBH2fMA87Dz7" } }
                 ]
@@ -241,6 +244,15 @@
                 console.error(err);
                 const code = err.code || "Unknown";
                 const message = err.message || JSON.stringify(err);
+
+                // [Fix] 容錯處理：針對 EXCEPTION_IN_SUBWINDOW (通常是用戶取消或關閉視窗)
+                // 顯示 Manual UI 而非 Error UI，讓體驗不中斷
+                if (code === "EXCEPTION_IN_SUBWINDOW" || message.includes("EXCEPTION_IN_SUBWINDOW")) {
+                    console.log("Subwindow exception handled, showing manual UI");
+                    showUI('manualUI');
+                    return; 
+                }
+
                 showUI('errorUI', `[${code}] ${message}`);
             }
         }
